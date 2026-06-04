@@ -20,8 +20,8 @@ resource "random_id" "rand_id" {
 }
 
 resource "aws_s3_bucket" "demo_bucket" {
-    bucket="raj-${random_id.rand_id.hex}"
-    region="eu-north-1"
+    bucket="gouthami-${random_id.rand_id.hex}"
+    region="us-east-1"
     
 }
 resource "aws_s3_bucket_public_access_block" "public_access" {
