@@ -9,7 +9,7 @@ pipeline {
    
         stage ('terraform apply & init') {
             steps {
-                withAWS(credentials: 'aws-credentials-gouthami', region: 'us-east-1') {
+                withAWS(credentials: 'aws-creds-id', region: 'ap-south-1') {
                     sh 'terraform init'
                     sh 'terraform validate'
                     sh 'terraform apply -auto-approve'
@@ -19,7 +19,7 @@ pipeline {
         
         stage ('upload files to s3 bucket') {
             steps {
-                withAWS(credentials: 'aws-credentials-gouthami', region: 'us-east-1') {
+                withAWS(credentials: 'aws-creds-is', region: 'ap-south-1') {
                     sh '''
                         BUCKET_NAME=$(terraform output -raw name | cut -d'.' -f1)
                         aws s3 sync ./ s3://$BUCKET_NAME \
