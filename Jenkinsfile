@@ -1,27 +1,35 @@
 pipeline {
     agent any
+
     stages {
-        stage ('pull code from github') {
+
+        stage('Checkout Code') {
             steps {
-                git branch: 'master', url: 'https://github.com/gouthamitiseait/terraform-s3-bucket-create-and-host-static-website-IAC-code-in-HCL--project'
+                git branch: 'master',
+                url: 'https://github.com/gouthamitiseait/terraform-s3-bucket-create-and-host-static-website-IAC-code-in-HCL--project'
             }
         }
-   
-        stage ('terraform apply & init') {
+
+        stage('Terraform Init & Apply') {
             steps {
                 withAWS(credentials: 'aws-creds-id', region: 'ap-south-1') {
-                    sh 'terraform init'
-                    sh 'terraform validate'
-                    sh 'terraform apply -auto-approve'
+                    sh '''
+                        terraform init
+                        terraform validate
+                        terraform apply -auto-approve
+                    '''
                 }
             }
         }
-        
-        stage ('upload files to s3 bucket') {
+
+        stage('Upload Files to S3') {
             steps {
-                withAWS(credentials: 'aws-creds-is', region: 'ap-south-1') {
+                withAWS(credentials: 'aws-creds-id', region: 'ap-south-1') {
                     sh '''
-                        BUCKET_NAME=$(terraform output -raw name | cut -d'.' -f1)
+                        BUCKET_NAME=$(terraform output -raw name)
+
+                        echo "Uploading to bucket: $BUCKET_NAME"
+
                         aws s3 sync ./ s3://$BUCKET_NAME \
                           --exclude ".git/*" \
                           --exclude ".terraform/*" \
@@ -35,14 +43,15 @@ pipeline {
             }
         }
     }
-    
+
     post {
         success {
-            echo 'static website deployment successful'
-            sh 'terraform output -raw name'
+            echo '✅ Static website deployed successfully'
+            sh 'terraform output'
         }
+
         failure {
-            echo 'static website deployment failure'
+            echo '❌ Static website deployment failed'
         }
     }
 }
