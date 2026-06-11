@@ -19,7 +19,7 @@ resource "random_id" "rand_id" {
   byte_length = 8
 }
 
-# ---------------- S3 BUCKET ----------------
+# ---------------- BUCKET ----------------
 resource "aws_s3_bucket" "demo_bucket" {
   bucket = "gouthami-${random_id.rand_id.hex}"
 
@@ -36,6 +36,8 @@ resource "aws_s3_bucket_public_access_block" "public_access" {
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
+
+  depends_on = [aws_s3_bucket.demo_bucket]
 }
 
 # ---------------- BUCKET POLICY ----------------
@@ -44,15 +46,13 @@ resource "aws_s3_bucket_policy" "newpolicy" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "PublicReadGetObject"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:GetObject"
-        Resource  = "arn:aws:s3:::${aws_s3_bucket.demo_bucket.id}/*"
-      }
-    ]
+    Statement = [{
+      Sid       = "PublicReadGetObject"
+      Effect    = "Allow"
+      Principal = "*"
+      Action    = "s3:GetObject"
+      Resource  = "arn:aws:s3:::${aws_s3_bucket.demo_bucket.id}/*"
+    }]
   })
 
   depends_on = [
@@ -67,6 +67,11 @@ resource "aws_s3_bucket_website_configuration" "static" {
   index_document {
     suffix = "index.html"
   }
+
+  depends_on = [
+    aws_s3_bucket_public_access_block.public_access,
+    aws_s3_bucket_policy.newpolicy
+  ]
 }
 
 # ---------------- OUTPUT ----------------
